@@ -1,0 +1,7 @@
+version: '3'
+services:
+  cassandra1:
+    image: "cassandra:3.11.1"
+    hostname: "cassandra"
+    ports:
+      - "9042:9042"

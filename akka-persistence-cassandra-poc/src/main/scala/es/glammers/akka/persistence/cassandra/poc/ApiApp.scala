@@ -1,12 +1,11 @@
 package es.glammers.akka.persistence.cassandra.poc
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
-import akka.persistence.query.{Offset, PersistenceQuery}
 import akka.stream.ActorMaterializer
+import es.glammers.akka.persistence.cassandra.poc.CounterPersistentActor.Cmd
 
 object ApiApp {
 
@@ -20,16 +19,10 @@ object ApiApp {
     val port      = 8888
 
     // actor configuration
-    val counterRef: ActorRef = system.actorOf(Props[CounterPersistentActor], "myActor")
+    val counterRef: ActorRef =
+      system.actorOf(CounterPersistentActor.props, "CounterPersistentActor")
 
-    val cassandraReadJournal: CassandraReadJournal = PersistenceQuery(system)
-      .readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
-    val offset: Offset = cassandraReadJournal.timeBasedUUIDFrom(0L)
-    cassandraReadJournal
-      .eventsByTag("myTag", offset)
-      .runForeach(event =>
-        log.info(
-          s"pid: ${event.persistenceId}, sequenceNr: ${event.sequenceNr}, offset: ${event.offset}, event: ${event.event}"))
+    system.actorOf(ProjectionActor.props, "ProjectionActor")
 
     // Bind service
     Http().bindAndHandle(routes, interface, port)

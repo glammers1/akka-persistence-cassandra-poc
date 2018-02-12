@@ -17,16 +17,20 @@ class CounterPersistentActor extends PersistentActor {
     state = state.updated(event)
 
   val receiveRecover: Receive = {
-    case evt: Evt => updateState(evt)
+    case evt: Evt                                                => updateState(evt)
+    case SnapshotOffer(_, snapshot: CounterPersistentActorState) ⇒ state = snapshot
   }
 
   val receiveCommand: Receive = {
     case Cmd(data) =>
-      persistAll(List(Tagged(Evt(data), Set("all", "myTag")),
-                      Tagged(MessageProcessed, Set("all", "myTag")))) {
-        case Tagged(evt @ Evt(_), _) => updateState(evt)
-        case Tagged(_, _)            => context.system.log.info("message processed")
-
+      persistAll(
+        List(Tagged(Evt(data + state.counter), Set("all", "myTag")),
+             Tagged(MessageProcessed, Set("all", "myTag")))) {
+        case Tagged(evt @ Evt(_), _) =>
+          updateState(evt)
+        case Tagged(_, _) =>
+          context.system.log.info("message processed")
+          saveSnapshot(state)
       }
     case "print" => context.system.log.info(s"${state.counter}")
   }
@@ -36,7 +40,7 @@ object CounterPersistentActor {
   def props: Props = Props(new CounterPersistentActor)
 
   case class CounterPersistentActorState(counter: Int = 0) {
-    def updated(evt: Evt): CounterPersistentActorState = copy(evt.data + counter)
+    def updated(evt: Evt): CounterPersistentActorState = copy(evt.data)
   }
 
   case class Cmd(data: Int)

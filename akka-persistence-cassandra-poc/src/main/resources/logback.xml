@@ -6,7 +6,10 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <logger name="com.datastax.driver" level="WARN" />
+    <logger name="io.netty.util" level="WARN" />
+
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

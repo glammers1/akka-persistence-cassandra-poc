@@ -13,7 +13,7 @@ object Version {
   object Akka {
     final val AkkaVersion: String                     = "2.5.9"
     final val AkkaHttpVersion: String                 = "10.0.11"
-    final val AkkaPersistenceCassandraVersion: String = "0.80"
+    final val AkkaPersistenceCassandraVersion: String = "0.81"
   }
 
   object JsonMarshalling {

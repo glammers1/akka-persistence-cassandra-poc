@@ -6,10 +6,10 @@ import akka.actor.Props
 import akka.persistence._
 import akka.persistence.journal.Tagged
 
-class CounterPersistentActor extends PersistentActor {
+class CounterPersistentActor(name: String) extends PersistentActor {
   import CounterPersistentActor._
 
-  override def persistenceId = "myPid"
+  override def persistenceId = s"myPid-$name"
 
   var state = CounterPersistentActorState()
 
@@ -22,14 +22,14 @@ class CounterPersistentActor extends PersistentActor {
   }
 
   val receiveCommand: Receive = {
-    case Cmd(data) =>
+    case Cmd =>
       persistAll(
-        List(Tagged(Evt(data + state.counter), Set("all", "myTag")),
+        List(Tagged(Evt(1 + state.counter), Set("all", "myTag")),
              Tagged(MessageProcessed, Set("all", "myTag")))) {
         case Tagged(evt @ Evt(_), _) =>
           updateState(evt)
         case Tagged(_, _) =>
-          context.system.log.info("message processed")
+//          context.system.log.info("message processed")
           saveSnapshot(state)
       }
     case "print" => context.system.log.info(s"${state.counter}")
@@ -37,13 +37,13 @@ class CounterPersistentActor extends PersistentActor {
 }
 
 object CounterPersistentActor {
-  def props: Props = Props(new CounterPersistentActor)
+  def props(name: String): Props = Props(new CounterPersistentActor(name))
 
   case class CounterPersistentActorState(counter: Int = 0) {
     def updated(evt: Evt): CounterPersistentActorState = copy(evt.data)
   }
 
-  case class Cmd(data: Int)
+  case object Cmd
   case class Evt(data: Int)
   case class MessageProcessed(
       messageId: String = "id",

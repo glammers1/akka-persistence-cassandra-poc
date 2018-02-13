@@ -20,7 +20,7 @@ object ApiApp {
 
     // actor configuration
     val counterRef: ActorRef =
-      system.actorOf(CounterPersistentActor.props, "CounterPersistentActor")
+      system.actorOf(CounterPersistentActor.props("1"), "CounterPersistentActor1")
 
     system.actorOf(ProjectionActor.props, "ProjectionActor")
 
@@ -35,7 +35,7 @@ object ApiApp {
         pathEndOrSingleSlash {
           post {
             complete {
-              counterRef ! Cmd(1)
+              counterRef ! Cmd
               "incremented"
             }
           }

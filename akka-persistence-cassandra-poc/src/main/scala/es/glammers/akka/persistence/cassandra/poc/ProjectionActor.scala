@@ -19,7 +19,7 @@ class ProjectionActor extends PersistentActor with ActorLogging {
     implicit val mat: ActorMaterializer = ActorMaterializer()
     val cassandraReadJournal: CassandraReadJournal = PersistenceQuery(context.system)
       .readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
-    val offset: Offset = cassandraReadJournal.timeBasedUUIDFrom(0L) // poc, always from zero
+    val offset: Offset = state.currentOffset.getOrElse(cassandraReadJournal.timeBasedUUIDFrom(0L))
     cassandraReadJournal
       .eventsByTag("myTag", offset)
       .runWith(Sink.actorRefWithAck(self, initMessage, ackMessage, completeMessage))
